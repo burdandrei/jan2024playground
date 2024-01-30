@@ -31,36 +31,6 @@ resource "aws_key_pair" "generated_key" {
   public_key = tls_private_key.playground.public_key_openssh
 }
 
-resource "aws_security_group_rule" "allow_inbound_ssh" {
-  type        = "ingress"
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = module.vpc.default_security_group_id
-}
-
-resource "aws_security_group_rule" "allow_inbound_boundary" {
-  type        = "ingress"
-  from_port   = 9200
-  to_port     = 9202
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = module.vpc.default_security_group_id
-}
-
-resource "aws_security_group_rule" "allow_out" {
-  type        = "egress"
-  from_port   = 0
-  to_port     = 65535
-  protocol    = "All"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  security_group_id = module.vpc.default_security_group_id
-}
-
 resource "aws_instance" "public_worker" {
   ami                         = data.aws_ami.base.image_id
   instance_type               = "t3.micro"
@@ -71,6 +41,10 @@ resource "aws_instance" "public_worker" {
   tags = {
     Name = "boundary public worker"
   }
+}
+
+output "ssh_to_public_worker" {
+  value = "\nssh -i id_rsa.playground ubuntu@${aws_instance.public_worker.public_ip}\n"
 }
 
 resource "aws_instance" "private_worker" {
